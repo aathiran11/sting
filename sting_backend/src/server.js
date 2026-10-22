@@ -21,6 +21,8 @@ app.use(cors());
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
 
+app.get("/", (req, res) => res.json({ name: "Sting API", status: "online", version: "1.0.0" }));
+app.get("/health", (req, res) => res.json({ ok: true }));
 app.get("/api/health", (req, res) => res.json({ ok: true }));
 
 app.use("/api/auth", authRoutes);
@@ -42,13 +44,13 @@ import fs from "fs";
 import { pool } from "./db.js";
 
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, async () => {
-  console.log(`Sting API running on http://localhost:${PORT}`);
+app.listen(PORT, "0.0.0.0", async () => {
+  console.log(`Sting API running on port ${PORT}`);
   try {
     const sql = fs.readFileSync(path.join(__dirname, "..", "sql", "schema.sql"), "utf8");
     await pool.query(sql);
     console.log("Database schema synced successfully.");
   } catch (err) {
-    console.warn("Database sync notice (check Postgres is running):", err.message);
+    console.warn("Database sync notice:", err.message);
   }
 });

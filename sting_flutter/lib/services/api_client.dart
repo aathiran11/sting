@@ -14,11 +14,7 @@ import 'package:http_parser/http_parser.dart';
 ///   `ipconfig` in PowerShell).
 /// - iOS simulator: "http://localhost:4000/api" works directly.
 class ApiConfig {
-  // TODO: replace with your PC's local IP (find it with `ipconfig` in
-  // PowerShell, look for "IPv4 Address" under your active Wi-Fi adapter).
-  // Your phone and PC must be on the same Wi-Fi network.
-  // Example: "http://192.168.1.23:4000/api"
-static String baseUrl = "http://localhost:4000/api";
+  static String baseUrl = "https://sting-bepz.onrender.com/api";
 }
 
 class ApiException implements Exception {
