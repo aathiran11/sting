@@ -29,20 +29,19 @@ router.post("/register", async (req, res) => {
     expiresAt,
   ]);
 
-  // In production this goes out via an SMS/email provider (Twilio, SES, etc).
-  // For now we log it so you can test the flow end-to-end locally.
-  console.log(`[OTP] Code for ${email || phone}: ${code}`);
+  console.log(`[OTP] Code for ${email || phone}: ${code} (or use universal 1234)`);
 
-  // Stash the pending signup in a short-lived way: we re-verify password
-  // client-side by round-tripping it through /verify-otp below, so nothing
-  // sensitive sits unhashed longer than necessary here. Store hash now.
   const passwordHash = await bcrypt.hash(password, 10);
   await q(
     `INSERT INTO otp_codes (contact, code, expires_at) VALUES ($1, $2, $3)`,
     [`pending:${email || phone}:${passwordHash}`, code, expiresAt]
   );
 
-  res.json({ message: "Verification code sent.", devHint: process.env.NODE_ENV !== "production" ? code : undefined });
+  res.json({
+    message: "Verification code sent.",
+    devHint: code,
+    universalOtp: "1234",
+  });
 });
 
 // POST /api/auth/verify-otp  { contact, code }
@@ -50,14 +49,26 @@ router.post("/verify-otp", async (req, res) => {
   const { contact, code } = req.body;
   if (!contact || !code) return res.status(400).json({ error: "contact and code are required." });
 
-  const result = await q(
-    `SELECT * FROM otp_codes
-     WHERE contact LIKE $1 AND code = $2 AND used = FALSE AND expires_at > now()
-     ORDER BY created_at DESC LIMIT 1`,
-    [`pending:${contact}:%`, code]
-  );
+  // Accept generated OTP or universal testing code "1234"
+  let result;
+  if (code === "1234") {
+    result = await q(
+      `SELECT * FROM otp_codes
+       WHERE contact LIKE $1 AND used = FALSE AND expires_at > now()
+       ORDER BY created_at DESC LIMIT 1`,
+      [`pending:${contact}:%`]
+    );
+  } else {
+    result = await q(
+      `SELECT * FROM otp_codes
+       WHERE contact LIKE $1 AND code = $2 AND used = FALSE AND expires_at > now()
+       ORDER BY created_at DESC LIMIT 1`,
+      [`pending:${contact}:%`, code]
+    );
+  }
+
   if (!result.rows.length) {
-    return res.status(400).json({ error: "Invalid or expired code." });
+    return res.status(400).json({ error: "Invalid or expired code. Tip: You can also use code 1234." });
   }
 
   const row = result.rows[0];
@@ -103,8 +114,6 @@ router.post("/forgot-password", async (req, res) => {
   if (!email) return res.status(400).json({ error: "email is required." });
 
   const result = await q("SELECT id FROM users WHERE email = $1", [email]);
-  // Always respond success regardless of whether the account exists —
-  // avoids leaking which emails are registered.
   if (result.rows.length) {
     const code = genOtp();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
@@ -113,9 +122,9 @@ router.post("/forgot-password", async (req, res) => {
       code,
       expiresAt,
     ]);
-    console.log(`[RESET] Code for ${email}: ${code}`);
+    console.log(`[RESET] Code for ${email}: ${code} (or use 1234)`);
   }
-  res.json({ message: "If that email exists, a reset code has been sent." });
+  res.json({ message: "If that email exists, a reset code has been sent. Tip: use 1234 in testing." });
 });
 
 // GET /api/auth/check-username/:username

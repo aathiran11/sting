@@ -25,13 +25,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Future<void> _submit() async {
     setState(() { loading = true; error = null; });
     try {
-      await widget.state.api.register(
+      final res = await widget.state.api.register(
         email: method == "email" ? widget.state.email : null,
         phone: method == "phone" ? widget.state.phone : null,
         password: widget.state.password,
       );
       if (!mounted) return;
-      Navigator.push(context, MaterialPageRoute(builder: (_) => OtpScreen(state: widget.state)));
+      final devHint = res["devHint"]?.toString() ?? "1234";
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => OtpScreen(state: widget.state, codeHint: devHint),
+        ),
+      );
     } on ApiException catch (e) {
       setState(() => error = e.message);
     } catch (e) {
