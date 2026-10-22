@@ -1,0 +1,66 @@
+name: Build & Release Android APK
+
+on:
+  push:
+    branches: [ master, main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Flutter APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        working-directory: sting_flutter
+        run: flutter pub get
+
+      - name: Build APK (Release)
+        working-directory: sting_flutter
+        run: flutter build apk --release
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sting-app-release
+          path: sting_flutter/build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Create GitHub Release with APK
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        with:
+          tag_name: v1.0.0-${{ github.run_number }}
+          name: Sting Mobile App v1.0.0 (Build ${{ github.run_number }})
+          body: |
+            ### 📱 Sting – The Social Media for Real Life
+            Download and install the APK on your Android device:
+            - **[app-release.apk](app-release.apk)**
+            
+            **What's inside:**
+            - ✨ Dribbble Midnight Obsidian & Royal Violet Theme
+            - 📸 Daily Unfiltered Live Camera Capture
+            - 🏆 Leaderboards & 1v1 Arena
+            - 🔥 Real Streaks & Sting Scores
+          files: sting_flutter/build/app/outputs/flutter-apk/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

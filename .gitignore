@@ -1,0 +1,31 @@
+# Root .gitignore for Sting monorepo
+
+# Node & Backend
+sting_backend/node_modules/
+sting_backend/.env
+sting_backend/uploads/*
+!sting_backend/uploads/.gitkeep
+
+# Flutter & Dart
+sting_flutter/.dart_tool/
+sting_flutter/.packages
+sting_flutter/build/
+sting_flutter/.flutter-plugins
+sting_flutter/.flutter-plugins-dependencies
+sting_flutter/.pub-cache/
+sting_flutter/.pub/
+
+# Android build artifacts & local properties
+sting_flutter/android/.gradle/
+sting_flutter/android/local.properties
+sting_flutter/android/app/build/
+sting_flutter/android/**/build/
+sting_flutter/key.properties
+*.jks
+
+# IDE & OS files
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db

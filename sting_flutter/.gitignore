@@ -1,0 +1,21 @@
+# Flutter .gitignore
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+
+# Android build artifacts
+android/.gradle/
+android/local.properties
+android/app/build/
+android/**/build/
+key.properties
+*.jks
+
+# IDE
+*.iml
+.idea/
+.vscode/
