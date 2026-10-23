@@ -4,7 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { q } from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
-import { nextStreak } from "../utils/streak.js";
+import { nextStreak, calculateStingScore } from "../utils/streak.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const router = express.Router();
